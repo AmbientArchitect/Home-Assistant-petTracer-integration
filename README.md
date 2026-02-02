@@ -2,12 +2,17 @@
 
 This custom integration allows you to track your pet's location using the petTracer cat collar in Home Assistant.
 
+Communication with the petTracer backend is managed by the petTracer-client library.
+
+**Note:** You will require an active subscription to petTracer to use this integration. Given the unofficial nature of the implementation, please treat their service with respect and use as intended.
+
 ## Features
 
 - **GPS Tracking**: View your pet's real-time location on the Home Assistant map
 - **Device Tracker Entity**: Each petTracer collar appears as a device tracker entity
 - **Battery Monitoring**: Track the battery level of your pet's collar (shown in entity attributes)
-- **Automatic Updates**: Location updates every 5 minutes
+- **Automatic Updates**: Location updates every 5 minutes (will switch to streaming data at some point)
+- **Multiple collars**: Should support any number of collars, although it has only been tested with one. If you have more than one let me know.
 
 ## Installation
 
@@ -17,27 +22,30 @@ This custom integration allows you to track your pet's location using the petTra
 
 ## Configuration
 
-### YAML Configuration (Simple Setup)
+### YAML Configuration
 
 Add the following to your `configuration.yaml`:
 
 ```yaml
+device_tracker:
+  - platform: pettracer
+
+# You can specify your credentials, but this is not recommended. Instead enter them via the UI.
+
 pettracer:
   username: your_pettracer_username
   password: your_pettracer_password
-
-device_tracker:
-  - platform: pettracer
 ```
 
 After adding this configuration:
+
 1. Save the file
 2. Restart Home Assistant
-3. Your pet trackers will appear as device tracker entities
 
 ### Config Flow (UI Configuration)
 
-Alternatively, you can set up the integration through the Home Assistant UI:
+Configure via the UI:
+
 1. Go to **Settings** → **Devices & Services**
 2. Click **Add Integration**
 3. Search for "petTracer"
@@ -46,6 +54,7 @@ Alternatively, you can set up the integration through the Home Assistant UI:
 ## Usage
 
 Once configured, your petTracer devices will appear as:
+
 - Device tracker entities (e.g., `device_tracker.pettracer_<device_id>`)
 - Each entity will show up on the Home Assistant map
 - The entity state will show "home", "not_home", or a zone name based on the GPS coordinates
@@ -53,6 +62,7 @@ Once configured, your petTracer devices will appear as:
 ### Entity Attributes
 
 Each device tracker entity provides the following information:
+
 - **latitude**: Current latitude coordinate
 - **longitude**: Current longitude coordinate
 - **gps_accuracy**: GPS accuracy in meters
@@ -63,6 +73,7 @@ Each device tracker entity provides the following information:
 ### Viewing on the Map
 
 To view your pet's location on the map:
+
 1. Go to the Home Assistant **Map** view
 2. Your pet's device tracker will appear as a marker on the map
 3. Click the marker to see details
@@ -87,28 +98,35 @@ automation:
 
 ## API Requirements
 
-This integration requires the `pettracer-client` Python library (version 0.1.0), which should be automatically installed by Home Assistant.
+This integration requires the `pettracer-client` Python library (version 0.2.0), which should be automatically installed by Home Assistant.
 
 The library provides access to:
+
 - `async_get_devices()`: Retrieve list of all petTracer devices
 - `async_get_device_location(device_id)`: Get current location for a specific device
 
 ## Troubleshooting
 
 ### Authentication Errors
+
 If you see authentication errors in the logs:
+
 1. Verify your username and password are correct
 2. Check that you can log in to the petTracer web interface
 3. Restart Home Assistant after correcting credentials
 
 ### No Devices Showing
+
 If no device trackers appear:
+
 1. Check the Home Assistant logs for errors
 2. Verify that your petTracer account has active devices
 3. Ensure the `pettracer-client` library is installed correctly
 
 ### Location Not Updating
+
 If location isn't updating:
+
 1. Check that your pet's collar has a GPS signal
 2. Verify the collar has sufficient battery
 3. Check the `last_update` attribute to see when the last update occurred
@@ -116,12 +134,9 @@ If location isn't updating:
 ## Support
 
 For issues with the integration:
+
 - Check the Home Assistant logs for errors
 - Report issues on the GitHub repository
-
-For issues with the petTracer service or hardware:
-- Contact petTracer support
-- Visit https://github.com/AmbientArchitect/petTracer-API
 
 ## License
 
