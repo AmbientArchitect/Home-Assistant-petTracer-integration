@@ -1,0 +1,46 @@
+# Example configuration.yaml for petTracer Integration
+
+# Add this to your configuration.yaml file:
+
+pettracer:
+  username: "your_pettracer_email@example.com"
+  password: "your_pettracer_password"
+
+device_tracker:
+  - platform: pettracer
+
+# That's it! After restarting Home Assistant, your petTracer devices
+# will appear as device tracker entities and show up on the map.
+
+# Optional: You can also add zones for your pet's favorite places
+zone:
+  - name: Dog Park
+    latitude: 37.7749
+    longitude: -122.4194
+    radius: 100
+    icon: mdi:dog
+
+# Example automation: Get notified when your pet leaves home
+automation:
+  - alias: "Pet Left Home"
+    trigger:
+      - platform: state
+        entity_id: device_tracker.pettracer_DEVICE_ID  # Replace with your actual device ID
+        from: "home"
+        to: "not_home"
+    action:
+      - service: notify.notify
+        data:
+          title: "Pet Alert"
+          message: "Your pet has left home!"
+
+  - alias: "Pet Returned Home"
+    trigger:
+      - platform: state
+        entity_id: device_tracker.pettracer_DEVICE_ID  # Replace with your actual device ID
+        to: "home"
+    action:
+      - service: notify.notify
+        data:
+          title: "Pet Alert"
+          message: "Your pet is back home!"
