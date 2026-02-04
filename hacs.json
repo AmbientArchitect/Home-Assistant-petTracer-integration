@@ -1,0 +1,7 @@
+{
+  "name": "petTracer",
+  "homeassistant": "2023.11.0",
+  "documentation": "https://github.com/AmbientArchitect/Home-Assistant-petTracer-integration",
+  "issues": "https://github.com/AmbientArchitect/Home-Assistant-petTracer-integration/issues",
+  "requirements": ["pettracer_client>=0.2.0"]
+}

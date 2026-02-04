@@ -1,8 +1,8 @@
 # 🐾 petTracer Integration for Home Assistant
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
-[![GitHub Release](https://img.shields.io/github/release/AmbientArchitect/pettracer-hass.svg)](https://github.com/AmbientArchitect/pettracer-hass/releases)
-[![License](https://img.shields.io/github/license/AmbientArchitect/pettracer-hass.svg)](LICENSE)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
+[![GitHub Release](https://img.shields.io/github/release/AmbientArchitect/Home-Assistant-petTracer-integration.svg)](https://github.com/AmbientArchitect/Home-Assistant-petTracer-integration/releases)
+[![License](https://img.shields.io/github/license/AmbientArchitect/Home-Assistant-petTracer-integration.svg)](LICENSE)
 
 Track your pet's location in real-time with the **petTracer** cat collar integration for Home Assistant! 🐱📍
 
@@ -32,7 +32,12 @@ Track your pet's location in real-time with the **petTracer** cat collar integra
 
 ### HACS Installation
 
-_Coming soon!_
+1. Click the button below to add this repository to HACS:
+  [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=AmbientArchitect&repository=Home-Assistant-petTracer-integration&category=integration)
+
+2. Install the integration from HACS
+3. 🔄 Restart Home Assistant
+4. ⚙️ Set up the integration through the UI
 
 ---
 
@@ -211,7 +216,7 @@ If some sensor entities are missing:
 ### 🐛 Integration Issues
 
 - 📋 Check the Home Assistant logs for errors
-- 🐙 Report issues on the [GitHub repository](https://github.com/AmbientArchitect/Home-Assistant-petTracer-integration)
+- 🐙 Report issues on the [GitHub repository](https://github.com/AmbientArchitect/Home-Assistant-petTracer-integration/issues)
 
 ---
 
