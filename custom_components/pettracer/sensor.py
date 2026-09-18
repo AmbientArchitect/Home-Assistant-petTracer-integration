@@ -23,6 +23,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
+from pettracer.types import TrackingMode
+
 from . import PetTracerDataUpdateCoordinator
 from .const import DOMAIN
 
@@ -198,13 +200,13 @@ class PetTracerSensor(CoordinatorEntity, SensorEntity):
 
         if self.entity_description.key == "tracking_mode":
             if device.modeSet is not None:
-                modes = {1: "Fast", 2: "Normal", 3: "Slow"}
+                modes = {1: "Fast", 2: "Normal", 3: "Slow", 11: "Search"}
                 return modes.get(device.modeSet, "Unknown")
             return None
 
         if self.entity_description.key == "search_status":
-            if device.search is not None:
-                return "On" if device.search else "Off"
+            if device.mode is not None:
+                return "On" if device.mode == TrackingMode.SEARCH else "Off"
             return None
 
         return None

@@ -11,6 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from pettracer.types import TrackingMode
+
 from . import PetTracerDataUpdateCoordinator
 from .const import DOMAIN
 
@@ -151,7 +153,8 @@ class PetTracerDeviceTracker(CoordinatorEntity, TrackerEntity):
             attrs["tracking_mode"] = modes.get(device.modeSet, "Unknown")
 
         # Add live tracking status
-        if device.search is not None:
-            attrs["live_tracking"] = "On" if device.search else "Off"
+        if device.mode is not None:
+            searching = device.mode == TrackingMode.SEARCH
+            attrs["live_tracking"] = "On" if searching else "Off"
 
         return attrs

@@ -15,10 +15,13 @@ Track your pet's location in real-time with the **petTracer** cat collar integra
 - 📊 **Sensor Entities** - Monitor battery level, charging status, tracking mode, GPS quality, and more
 - 🔋 **Battery Monitoring** - Dedicated battery level sensor with voltage information
 - ⚡ **Charging Status** - Know when your pet's collar is charging
-- 🎯 **Tracking Modes** - View current tracking mode (Fast, Normal, or Slow)
 - 🔴 **Live Tracking Status** - See when live tracking mode is enabled
-- 🔄 **Automatic Updates** - Location updates every minute
+- ⚡ **Realtime Push Updates** - Location and status changes stream in as they happen, instead of waiting on a poll interval
 - 🛰️ **GPS Quality** - Monitor satellite count and signal strength
+- 🎛️ **Tracking Mode Control** - Choose the collar's tracking speed (Fast, Normal, Slow, Super slow) from a select entity
+- 🔎 **Find My Cat** - A button to trigger the collar's temporary high-frequency search mode
+- 💡 **LED Switch** - Turn the collar's LED on or off
+- 🔊 **Buzzer Switch** - Turn the collar's buzzer on or off (on collars that have one)
 
 ---
 
@@ -29,6 +32,8 @@ Track your pet's location in real-time with the **petTracer** cat collar integra
 1. 📁 Copy the `pettracer` folder to your Home Assistant `custom_components` directory
 2. 🔄 Restart Home Assistant
 3. ⚙️ Set up the integration through the UI
+
+> **📝 Note:** This integration requires Home Assistant **2024.4.0** or newer (it depends on a library that requires Python 3.12+).
 
 ### HACS Installation
 
@@ -62,6 +67,9 @@ Once configured, your petTracer devices will appear as:
 
 - 📍 Device tracker entity (e.g., `device_tracker.pettracer_<device_id>`)
 - 📊 Multiple sensor entities for detailed information
+- 💡 LED switch, and a buzzer switch on collars that have one
+- 🎛️ Tracking mode select entity
+- 🔎 Find button to trigger search mode
 
 ### 📍 Device Tracker Entity
 
@@ -100,6 +108,23 @@ The device tracker entity includes additional attributes:
 - 🔴 **live_tracking** - Live tracking status
 - 🕐 **last_update** - Timestamp of the last location update
 - 📞 **last_contact** - Last communication timestamp
+
+### 🎛️ Collar Control
+
+Each collar also exposes control entities:
+
+| Entity                          | Type   | Description                                                        |
+| -------------------------------- | ------ | -------------------------------------------------------------------- |
+| 🎯 **Tracking mode**             | Select | Choose Fast, Normal, Slow, or Super slow tracking speed              |
+| 🔎 **Find**                      | Button | Activates the collar's temporary ~21s high-frequency search mode     |
+| 💡 **LED**                       | Switch | Turns the collar's LED on/off                                        |
+| 🔊 **Buzzer**                    | Switch | Turns the collar's buzzer on/off _(only shown if the collar has one)_ |
+
+Mode changes and search mode are acknowledged asynchronously by the collar - watch the **Tracking mode** and **Live tracking** entities to see when the collar confirms the change.
+
+### ⚡ Realtime Updates
+
+Position and status updates are pushed from petTracer as they happen, rather than waiting on a fixed poll interval. A 15-minute background poll still runs as a fallback in case the push connection drops.
 
 ### 🗺️ Viewing on the Map
 
@@ -163,13 +188,28 @@ automation:
           message: "🔌 Pet collar is now charging"
 ```
 
+### 🔎 Find the Collar
+
+```yaml
+automation:
+  - alias: "🔎 Find pet collar"
+    trigger:
+      - platform: state
+        entity_id: input_boolean.find_pet
+        to: "on"
+    action:
+      - service: button.press
+        target:
+          entity_id: button.pet_tracker_<device_id>_find
+```
+
 ---
 
 ## 🔧 API Requirements
 
-This integration requires the `pettracer` Python library, which is automatically installed by Home Assistant.
+This integration requires the `pettracer-client` Python library (v0.3.0+), which is automatically installed by Home Assistant.
 
-The library provides access to the petTracer API for retrieving device information and location data.
+The library provides access to the petTracer API for retrieving device information and location data, a realtime push-update stream, and collar control (LED, buzzer, tracking mode, search mode).
 
 ---
 

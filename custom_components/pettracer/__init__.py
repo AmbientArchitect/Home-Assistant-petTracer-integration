@@ -14,6 +14,8 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from pettracer import PetTracerClient, PetTracerError
+from pettracer.stream import PetTracerStream
+from pettracer.types import Device
 
 from .const import DOMAIN, PLATFORMS
 
@@ -58,6 +60,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
     _LOGGER.debug("First refresh complete")
 
+    try:
+        await coordinator.async_start_stream()
+    except PetTracerError as err:
+        _LOGGER.error("Failed to start petTracer realtime stream: %s", err)
+        await session.close()
+        raise ConfigEntryNotReady from err
+
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
     _LOGGER.debug("Coordinator stored in hass.data")
@@ -72,9 +81,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         coordinator = hass.data[DOMAIN].pop(entry.entry_id)
-        # Close the session we created
-        if hasattr(coordinator, "session"):
-            await coordinator.session.close()
+        await coordinator.async_stop_stream()
+        await coordinator.session.close()
 
     return unload_ok
 
@@ -93,13 +101,39 @@ class PetTracerDataUpdateCoordinator(DataUpdateCoordinator):
         self.client = client
         self.entry = entry
         self.session = session
+        self.stream: PetTracerStream | None = None
 
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(minutes=1),
+            # Routine updates arrive via the realtime stream; this is a
+            # fallback poll in case the stream is down or misses a device.
+            update_interval=timedelta(minutes=15),
         )
+
+    async def async_start_stream(self) -> None:
+        """Start the realtime push-update stream for this account's devices."""
+        stream = self.client.get_stream()
+        stream.on_update(self._handle_stream_update)
+        stream.on_connect(lambda: _LOGGER.debug("petTracer stream connected"))
+        stream.on_disconnect(
+            lambda err: _LOGGER.debug("petTracer stream disconnected: %s", err)
+        )
+        await stream.start()
+        self.stream = stream
+
+    async def async_stop_stream(self) -> None:
+        """Stop the realtime push-update stream, if running."""
+        if self.stream is not None:
+            await self.stream.stop()
+            self.stream = None
+
+    def _handle_stream_update(self, device: Device) -> None:
+        """Store a pushed device update (already merged by the stream)."""
+        data = dict(self.data or {})
+        data[device.id] = device
+        self.async_set_updated_data(data)
 
     async def _async_update_data(self):
         """Fetch data from petTracer API."""
