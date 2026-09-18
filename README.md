@@ -87,7 +87,7 @@ Each device provides the following sensors:
 | 🔋 **Battery Level**   | `mdi:battery`           | Battery percentage (0-100%)                               |
 | ⚡ **Battery Voltage** | `mdi:flash`             | Raw battery voltage in millivolts _(disabled by default)_ |
 | 🔌 **Charging Status** | `mdi:battery-charging`  | Shows "Charging" or "Not charging"                        |
-| 🎯 **Tracking Mode**   | `mdi:crosshairs`        | Current tracking mode - "Fast", "Normal", or "Slow"       |
+| 🎯 **Tracking Mode**   | `mdi:crosshairs`        | Current tracking mode - "Fast", "Normal", "Slow", or "Super slow" |
 | 🔴 **Live Tracking**   | `mdi:radar`             | Shows "On" or "Off" for search/live tracking mode         |
 | 🛰️ **GPS Satellites**  | `mdi:satellite-variant` | Number of GPS satellites connected                        |
 | 📶 **Signal Strength** | `mdi:signal`            | Cellular signal strength in dBm _(disabled by default)_   |
@@ -210,6 +210,23 @@ automation:
 This integration requires the `pettracer-client` Python library (v0.3.0+), which is automatically installed by Home Assistant.
 
 The library provides access to the petTracer API for retrieving device information and location data, a realtime push-update stream, and collar control (LED, buzzer, tracking mode, search mode).
+
+## 🧪 Development & Testing
+
+The test suite exercises the integration's entities, helpers, coordinator, config flow, and diagnostics without requiring a Home Assistant install (the small slice of the HA API the component uses is stubbed in `tests/conftest.py`):
+
+```bash
+uv venv .venv
+uv pip install --python .venv/bin/python \
+    "pettracer-client>=0.3.2" pytest pytest-asyncio voluptuous ruff
+.venv/bin/python -m pytest tests/ -v
+```
+
+Run the linter (bug-catching rules only) with:
+
+```bash
+.venv/bin/ruff check custom_components/ tests/ --select F,E9
+```
 
 ---
 

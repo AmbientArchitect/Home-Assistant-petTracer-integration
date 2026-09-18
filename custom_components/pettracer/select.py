@@ -3,18 +3,18 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from pettracer.types import TrackingMode
 
 from . import PetTracerDataUpdateCoordinator
 from .const import DOMAIN
+from .entity import PetTracerEntity
+from .helpers import device_display_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,20 +41,18 @@ async def async_setup_entry(
     entities = []
     if coordinator.data:
         for device_id, device in coordinator.data.items():
-            device_name = (
-                device.details.name if device.details else f"Pet Tracker {device_id}"
-            )
             entities.append(
-                PetTracerTrackingModeSelect(coordinator, device_id, device_name)
+                PetTracerTrackingModeSelect(
+                    coordinator, device_id, device_display_name(device, device_id)
+                )
             )
 
     async_add_entities(entities)
 
 
-class PetTracerTrackingModeSelect(CoordinatorEntity, SelectEntity):
+class PetTracerTrackingModeSelect(PetTracerEntity, SelectEntity):
     """Select entity for a petTracer collar's tracking mode."""
 
-    _attr_has_entity_name = True
     _attr_name = "Tracking mode"
     _attr_icon = "mdi:crosshairs-gps"
     _attr_options = list(OPTION_TO_MODE)
@@ -62,33 +60,11 @@ class PetTracerTrackingModeSelect(CoordinatorEntity, SelectEntity):
     def __init__(
         self,
         coordinator: PetTracerDataUpdateCoordinator,
-        device_id: int,
+        device_id: str,
         device_name: str,
     ) -> None:
         """Initialize the tracking mode select."""
-        super().__init__(coordinator)
-        self._device_id = device_id
-        self._device_name = device_name
-        self._attr_unique_id = f"{DOMAIN}_{device_id}_tracking_mode_select"
-
-    @property
-    def device_info(self) -> dict[str, Any]:
-        """Return device information about this select."""
-        return {
-            "identifiers": {(DOMAIN, self._device_id)},
-            "name": self._device_name,
-            "manufacturer": "petTracer",
-            "model": "Pet Collar",
-        }
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return (
-            super().available
-            and self.coordinator.data is not None
-            and self._device_id in self.coordinator.data
-        )
+        super().__init__(coordinator, device_id, device_name, "tracking_mode_select")
 
     @property
     def current_option(self) -> str | None:
@@ -98,7 +74,9 @@ class PetTracerTrackingModeSelect(CoordinatorEntity, SelectEntity):
         collar-confirmed mode (`mode`), matching the portal's own display -
         see PetTracerDevice.set_tracking_mode()'s docstring.
         """
-        device = self.coordinator.data[self._device_id]
+        device = self._device()
+        if device is None:
+            return None
         mode = device.modeSet if device.modeSet is not None else device.mode
         if mode is None:
             return None

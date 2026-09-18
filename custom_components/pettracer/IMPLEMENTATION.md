@@ -9,14 +9,14 @@ This document summarizes the complete implementation of the petTracer Home Assis
 **Location:** `/workspaces/hacore/config/custom_components/pettracer/__init__.py`
 
 **Key Features:**
-- Supports both YAML and config entry (UI) setup
+- Config entry (UI) setup only
 - Creates a `PetTracerDataUpdateCoordinator` for managing data updates
 - Authenticates with the petTracer API using username/password
-- Updates device location every 1 minutes
+- Receives realtime push updates from the collar stream, with a 15-minute fallback poll
 - Handles authentication errors gracefully
 
 **Main Functions:**
-- `async_setup()`: Handles YAML configuration
+- `async_setup()`: Legacy setup hook (returns True; YAML configuration is not supported)
 - `async_setup_entry()`: Sets up from config entry
 - `async_unload_entry()`: Cleanly unloads the integration
 - `PetTracerDataUpdateCoordinator._async_update_data()`: Fetches device locations
@@ -76,21 +76,6 @@ Example configuration with:
 
 ## How to Use
 
-### YAML Configuration (Simplest Method)
-
-Add to your `configuration.yaml`:
-
-```yaml
-pettracer:
-  username: your_pettracer_email@example.com
-  password: your_pettracer_password
-
-device_tracker:
-  - platform: pettracer
-```
-
-Then restart Home Assistant.
-
 ### Config Flow (UI Method)
 
 1. Go to Settings → Devices & Services
@@ -103,7 +88,7 @@ Then restart Home Assistant.
 ### Data Flow
 1. **Authentication**: Connects to petTracer API with credentials
 2. **Device Discovery**: Retrieves all devices from your account
-3. **Location Updates**: Fetches GPS coordinates every 5 minutes
+3. **Location Updates**: Pushed in realtime from the collar stream; a 15-minute fallback poll covers stream outages
 4. **State Management**: Updates device_tracker entities with:
    - Current location (lat/lon)
    - GPS accuracy
@@ -128,31 +113,27 @@ Based on the `pettracer-client` library:
 
 ```python
 # Authentication & device list
-devices = await client.async_get_devices()
+await client.login(username, password, timeout=30)
+devices = await client.get_all_devices()
 
 # Location retrieval for each device
-location = await client.async_get_device_location(device_id)
+last_pos = device.lastPos
+pos = await client.get_device(device.id)
 ```
 
 ### Expected API Response Format
 
-**Devices:**
-```python
-{
-    "id": "device_unique_id",
-    "name": "Pet Collar Name",
-    "battery_level": 85  # Optional
-}
-```
+**Devices:** `pettracer.types.Device` dataclass instances with fields such as:
 
-**Location:**
 ```python
-{
-    "latitude": 37.7749,
-    "longitude": -122.4194,
-    "accuracy": 10,  # meters
-    "timestamp": "2026-01-13T12:00:00Z"  # Optional
-}
+Device(
+    id="device_unique_id",
+    details=Details(name="Pet Collar Name"),
+    bat=3900,          # battery voltage in mV
+    chg=0,             # 1 while charging
+    modeSet=TrackingMode.NORMAL,
+    lastPos=LastPos(posLat=37.7749, posLong=-122.4194, acc=10, sat=9),
+)
 ```
 
 ## Testing Checklist
@@ -163,7 +144,7 @@ Before using in production, verify:
 2. ✅ Devices are discovered correctly
 3. ✅ GPS coordinates are retrieved and displayed
 4. ✅ Entities appear on the map
-5. ✅ Updates occur every 5 minutes
+5. ✅ Realtime stream updates arrive; 15-minute fallback poll succeeds
 6. ✅ Battery level is shown (if available)
 7. ✅ Zone detection works (home/not_home)
 8. ✅ Automations trigger correctly
