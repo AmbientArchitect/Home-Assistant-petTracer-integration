@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
-from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -20,13 +19,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
-
-from pettracer.types import TrackingMode
 
 from . import PetTracerDataUpdateCoordinator
 from .const import DOMAIN
+from .entity import PetTracerEntity
+from .helpers import battery_percentage, charging_label, device_display_name, is_searching, tracking_mode_label
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,9 +92,7 @@ async def async_setup_entry(
     entities = []
     if coordinator.data:
         for device_id, device in coordinator.data.items():
-            device_name = (
-                device.details.name if device.details else f"Pet Tracker {device_id}"
-            )
+            device_name = device_display_name(device, device_id)
             for description in SENSOR_TYPES:
                 entities.append(
                     PetTracerSensor(
@@ -110,10 +106,8 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PetTracerSensor(CoordinatorEntity, SensorEntity):
+class PetTracerSensor(PetTracerEntity, SensorEntity):
     """Representation of a petTracer sensor."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -123,57 +117,31 @@ class PetTracerSensor(CoordinatorEntity, SensorEntity):
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the petTracer sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, device_id, device_name, description.key)
         self.entity_description = description
-        self._device_id = device_id
-        self._device_name = device_name
-        self._attr_unique_id = f"{DOMAIN}_{device_id}_{description.key}"
 
     @property
-    def device_info(self) -> dict[str, Any]:
-        """Return device information about this sensor."""
-        return {
-            "identifiers": {(DOMAIN, self._device_id)},
-            "name": self._device_name,
-            "manufacturer": "petTracer",
-            "model": "Pet Collar",
-        }
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return (
-            super().available
-            and self.coordinator.data is not None
-            and self._device_id in self.coordinator.data
-        )
-
-    @property
-    def native_value(self) -> int | float | datetime | None:
+    def native_value(self) -> int | float | str | datetime | None:
         """Return the state of the sensor."""
-        if not self.coordinator.data or self._device_id not in self.coordinator.data:
+        device = self._device()
+        if device is None:
             return None
 
-        device = self.coordinator.data[self._device_id]
-
         if self.entity_description.key == "battery_level":
-            # Convert battery voltage (mV) to approximate percentage
-            # Typical range: 3300mV (empty) to 4200mV (full)
             if device.bat:
-                return min(100, max(0, int((device.bat - 3300) / 9)))
+                return battery_percentage(device.bat)
             return None
 
         if self.entity_description.key == "battery_voltage":
             return device.bat
 
         if self.entity_description.key == "signal_strength":
-            if device.lastPos and device.lastPos.rssi is not None:
+            if device.lastPos is not None and device.lastPos.rssi is not None:
                 return device.lastPos.rssi
             return None
 
         if self.entity_description.key == "last_contact":
             if device.lastContact:
-                # If lastContact is a string, try to parse it
                 if isinstance(device.lastContact, str):
                     try:
                         return dt_util.parse_datetime(device.lastContact)
@@ -183,30 +151,24 @@ class PetTracerSensor(CoordinatorEntity, SensorEntity):
                             device.lastContact,
                         )
                         return None
-                # If it's already a datetime object
                 if isinstance(device.lastContact, datetime):
                     return device.lastContact
             return None
 
         if self.entity_description.key == "satellites":
-            if device.lastPos and device.lastPos.sat is not None:
+            if device.lastPos is not None and device.lastPos.sat is not None:
                 return device.lastPos.sat
             return None
 
         if self.entity_description.key == "charging_status":
-            if device.chg is not None:
-                return "Charging" if device.chg == 1 else "Not charging"
-            return None
+            return charging_label(device.chg)
 
         if self.entity_description.key == "tracking_mode":
-            if device.modeSet is not None:
-                modes = {1: "Fast", 2: "Normal", 3: "Slow", 11: "Search"}
-                return modes.get(device.modeSet, "Unknown")
-            return None
+            return tracking_mode_label(device.modeSet)
 
         if self.entity_description.key == "search_status":
             if device.mode is not None:
-                return "On" if device.mode == TrackingMode.SEARCH else "Off"
+                return "On" if is_searching(device.mode) else "Off"
             return None
 
         return None

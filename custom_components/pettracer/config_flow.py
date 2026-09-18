@@ -11,7 +11,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from pettracer import PetTracerClient, PetTracerError
 
 from .const import DOMAIN
@@ -50,15 +49,8 @@ async def validate_input(hass, data: dict[str, Any]) -> dict[str, Any]:
             devices = await client.get_all_devices()
             _LOGGER.debug("Retrieved %d devices", len(devices) if devices else 0)
 
-            if not devices:
+            if not devices or not any(device.id for device in devices):
                 raise CannotConnect("No devices found for this account")
-
-            # Extract collar IDs from Device objects (use device.id)
-            collar_ids = [device.id for device in devices if device.id]
-            _LOGGER.debug("Found collar IDs: %s", collar_ids)
-
-            if not collar_ids:
-                raise CannotConnect("No valid collar IDs found")
 
     except PetTracerError as err:
         _LOGGER.error("PetTracer error: %s", err)
@@ -76,11 +68,10 @@ async def validate_input(hass, data: dict[str, Any]) -> dict[str, Any]:
         )
         raise CannotConnect from err
 
-    # Return info including collar IDs for device setup
+    # Return info for the config entry; the collar list itself is fetched
+    # again during setup, so only the title is needed here.
     return {
         "title": data[CONF_USERNAME],
-        "collar_ids": collar_ids,
-        "device_count": len(collar_ids),
     }
 
 

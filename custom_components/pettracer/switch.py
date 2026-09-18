@@ -9,10 +9,11 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PetTracerDataUpdateCoordinator
 from .const import DOMAIN
+from .entity import PetTracerEntity
+from .helpers import device_display_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,9 +29,7 @@ async def async_setup_entry(
     entities = []
     if coordinator.data:
         for device_id, device in coordinator.data.items():
-            device_name = (
-                device.details.name if device.details else f"Pet Tracker {device_id}"
-            )
+            device_name = device_display_name(device, device_id)
             entities.append(PetTracerLedSwitch(coordinator, device_id, device_name))
             if device.buz is not None:
                 entities.append(
@@ -40,42 +39,18 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PetTracerSwitchBase(CoordinatorEntity, SwitchEntity):
+class PetTracerSwitchBase(PetTracerEntity, SwitchEntity):
     """Base class for petTracer collar switches."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
         coordinator: PetTracerDataUpdateCoordinator,
-        device_id: int,
+        device_id: str,
         device_name: str,
         key: str,
     ) -> None:
         """Initialize the switch."""
-        super().__init__(coordinator)
-        self._device_id = device_id
-        self._device_name = device_name
-        self._attr_unique_id = f"{DOMAIN}_{device_id}_{key}"
-
-    @property
-    def device_info(self) -> dict[str, Any]:
-        """Return device information about this switch."""
-        return {
-            "identifiers": {(DOMAIN, self._device_id)},
-            "name": self._device_name,
-            "manufacturer": "petTracer",
-            "model": "Pet Collar",
-        }
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return (
-            super().available
-            and self.coordinator.data is not None
-            and self._device_id in self.coordinator.data
-        )
+        super().__init__(coordinator, device_id, device_name, key)
 
 
 class PetTracerLedSwitch(PetTracerSwitchBase):
@@ -87,7 +62,7 @@ class PetTracerLedSwitch(PetTracerSwitchBase):
     def __init__(
         self,
         coordinator: PetTracerDataUpdateCoordinator,
-        device_id: int,
+        device_id: str,
         device_name: str,
     ) -> None:
         """Initialize the LED switch."""
@@ -96,7 +71,9 @@ class PetTracerLedSwitch(PetTracerSwitchBase):
     @property
     def is_on(self) -> bool | None:
         """Return true if the LED is on."""
-        device = self.coordinator.data[self._device_id]
+        device = self._device()
+        if device is None:
+            return None
         return device.led
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -119,7 +96,7 @@ class PetTracerBuzzerSwitch(PetTracerSwitchBase):
     def __init__(
         self,
         coordinator: PetTracerDataUpdateCoordinator,
-        device_id: int,
+        device_id: str,
         device_name: str,
     ) -> None:
         """Initialize the buzzer switch."""
@@ -128,7 +105,9 @@ class PetTracerBuzzerSwitch(PetTracerSwitchBase):
     @property
     def is_on(self) -> bool | None:
         """Return true if the buzzer is on."""
-        device = self.coordinator.data[self._device_id]
+        device = self._device()
+        if device is None:
+            return None
         return device.buz
 
     async def async_turn_on(self, **kwargs: Any) -> None:
