@@ -1,17 +1,13 @@
 {
   "domain": "pettracer",
   "name": "petTracer",
-  "codeowners": [
-    "@AmbientArchitect"
-  ],
+  "codeowners": ["@AmbientArchitect"],
   "config_flow": true,
   "documentation": "https://github.com/AmbientArchitect/petTracer-API",
   "integration_type": "device",
   "iot_class": "cloud_push",
   "quality_scale": "bronze",
-  "requirements": [
-    "pettracer_client==0.3.3"
-  ],
+  "requirements": ["pettracer_client==0.3.3"],
   "single_config_entry": true,
-  "version": "0.1.0"
+  "version": "0.2.0"
 }
