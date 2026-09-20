@@ -3,5 +3,5 @@
   "homeassistant": "2025.3.0",
   "documentation": "https://github.com/AmbientArchitect/Home-Assistant-petTracer-integration",
   "issues": "https://github.com/AmbientArchitect/Home-Assistant-petTracer-integration/issues",
-  "requirements": ["pettracer_client>=0.3.0"]
+  "requirements": ["pettracer_client>=0.3.3"]
 }
