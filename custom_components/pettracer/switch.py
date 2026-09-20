@@ -1,4 +1,4 @@
-"""Support for petTracer collar switches (LED, buzzer)."""
+"""Support for petTracer collar switches (LED, buzzer, search mode)."""
 
 from __future__ import annotations
 
@@ -10,6 +10,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from pettracer.types import TrackingMode
 
 from . import PetTracerDataUpdateCoordinator
 from .const import DOMAIN
@@ -36,6 +38,7 @@ async def async_setup_entry(
                 entities.append(
                     PetTracerBuzzerSwitch(coordinator, device_id, device_name)
                 )
+            entities.append(PetTracerSearchSwitch(coordinator, device_id, device_name))
 
     async_add_entities(entities)
 
@@ -139,4 +142,49 @@ class PetTracerBuzzerSwitch(PetTracerSwitchBase):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the buzzer off."""
         await self.coordinator.client.get_device(self._device_id).set_buzzer(False)
+        await self.coordinator.async_request_refresh()
+
+
+class PetTracerSearchSwitch(PetTracerSwitchBase):
+    """Switch to activate/deactivate a petTracer collar's search mode."""
+
+    _attr_name = "Search"
+    _attr_icon = "mdi:crosshairs-question"
+
+    def __init__(
+        self,
+        coordinator: PetTracerDataUpdateCoordinator,
+        device_id: int,
+        device_name: str,
+    ) -> None:
+        """Initialize the search switch."""
+        super().__init__(coordinator, device_id, device_name, "search")
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if search mode is active.
+
+        Checks both `Device.mode` and `Device.search` because neither alone
+        covers the whole search episode: `search` flips True the instant the
+        request is sent but flips back False once real fast fixes start
+        arriving, well before search mode itself ends, while `mode` only
+        catches up to `SEARCH` once the collar acknowledges the change. Using
+        only `mode` would flip the switch back off right after turning it on,
+        while Home Assistant waits for the collar to confirm.
+        """
+        device = self.coordinator.data[self._device_id]
+        return device.mode == TrackingMode.SEARCH or device.search is True
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Activate search mode."""
+        await self.coordinator.client.get_device(self._device_id).start_search_mode(
+            True
+        )
+        await self.coordinator.async_request_refresh()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Return the collar to Fast tracking mode."""
+        await self.coordinator.client.get_device(self._device_id).start_search_mode(
+            False
+        )
         await self.coordinator.async_request_refresh()

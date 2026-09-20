@@ -10,7 +10,7 @@
   "iot_class": "cloud_push",
   "quality_scale": "bronze",
   "requirements": [
-    "pettracer_client==0.3.1"
+    "pettracer_client==0.3.3"
   ],
   "single_config_entry": true,
   "version": "0.1.0"

@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c ' *)",
+      "Bash(mkdir -p /tmp/claude-1000/-workspaces-pettrace-integration-Home-Assistant-petTracer-integration/9ce4e9e4-4270-46ac-a518-161efe512c59/scratchpad/pt_pkg)",
+      "Bash(curl -sL -o pt.whl https://files.pythonhosted.org/packages/de/4a/d0c19f8fb8fc305ec13558d49559cd93a5061057fa915b984205832e2baf/pettracer_client-0.3.1-py3-none-any.whl)",
+      "Bash(python3 -m zipfile -e pt.whl extracted/)",
+      "Bash(xargs -I{} echo {})",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\('custom_components/pettracer/switch.py'\\).read\\(\\)\\)\")",
+      "Bash(curl -s https://pypi.org/pypi/pettracer_client/json)",
+      "Bash(curl -s https://pypi.org/pypi/pettracer_client/0.3.3/json)",
+      "Bash(mkdir -p /tmp/claude-1000/-workspaces-pettrace-integration-Home-Assistant-petTracer-integration/9ce4e9e4-4270-46ac-a518-161efe512c59/scratchpad/pt_pkg_033)",
+      "Bash(curl -sL -o pt033.whl https://files.pythonhosted.org/packages/2f/33/0221e32602d92ef1fca58929c5f9ac11b663b8d80c1ffea08b3fda9d8b20/pettracer_client-0.3.3-py3-none-any.whl)",
+      "Bash(python3 -m zipfile -e pt033.whl extracted/)"
+    ]
+  }
+}

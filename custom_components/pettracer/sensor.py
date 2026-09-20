@@ -17,6 +17,7 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfElectricPotential,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -79,6 +80,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="search_status",
         name="Live tracking",
         icon="mdi:radar",
+    ),
+    SensorEntityDescription(
+        key="search_mode_duration",
+        name="Search mode time remaining",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        icon="mdi:timer-sand",
     ),
 )
 
@@ -208,5 +216,8 @@ class PetTracerSensor(CoordinatorEntity, SensorEntity):
             if device.mode is not None:
                 return "On" if device.mode == TrackingMode.SEARCH else "Off"
             return None
+
+        if self.entity_description.key == "search_mode_duration":
+            return device.searchModeDuration
 
         return None

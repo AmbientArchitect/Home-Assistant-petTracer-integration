@@ -19,7 +19,7 @@ Track your pet's location in real-time with the **petTracer** cat collar integra
 - ⚡ **Realtime Push Updates** - Location and status changes stream in as they happen, instead of waiting on a poll interval
 - 🛰️ **GPS Quality** - Monitor satellite count and signal strength
 - 🎛️ **Tracking Mode Control** - Choose the collar's tracking speed (Fast, Normal, Slow, Super slow) from a select entity
-- 🔎 **Find My Cat** - A button to trigger the collar's temporary high-frequency search mode
+- 🔎 **Find My Cat** - A switch to trigger the collar's temporary high-frequency search mode
 - 💡 **LED Switch** - Turn the collar's LED on or off
 - 🔊 **Buzzer Switch** - Turn the collar's buzzer on or off (on collars that have one)
 
@@ -33,7 +33,7 @@ Track your pet's location in real-time with the **petTracer** cat collar integra
 2. 🔄 Restart Home Assistant
 3. ⚙️ Set up the integration through the UI
 
-> **📝 Note:** This integration requires Home Assistant **2024.4.0** or newer (it depends on a library that requires Python 3.12+).
+> **📝 Note:** This integration requires Home Assistant **2025.3.0** or newer (it uses `AddConfigEntryEntitiesCallback`, added in that release, and depends on a library that requires Python 3.12+).
 
 ### HACS Installation
 
@@ -69,7 +69,7 @@ Once configured, your petTracer devices will appear as:
 - 📊 Multiple sensor entities for detailed information
 - 💡 LED switch, and a buzzer switch on collars that have one
 - 🎛️ Tracking mode select entity
-- 🔎 Find button to trigger search mode
+- 🔎 Search switch to trigger search mode
 
 ### 📍 Device Tracker Entity
 
@@ -116,7 +116,7 @@ Each collar also exposes control entities:
 | Entity                          | Type   | Description                                                        |
 | -------------------------------- | ------ | -------------------------------------------------------------------- |
 | 🎯 **Tracking mode**             | Select | Choose Fast, Normal, Slow, or Super slow tracking speed              |
-| 🔎 **Find**                      | Button | Activates the collar's temporary ~21s high-frequency search mode     |
+| 🔎 **Search**                    | Switch | Toggles the collar's temporary ~21s high-frequency search mode       |
 | 💡 **LED**                       | Switch | Turns the collar's LED on/off                                        |
 | 🔊 **Buzzer**                    | Switch | Turns the collar's buzzer on/off _(only shown if the collar has one)_ |
 
@@ -198,9 +198,9 @@ automation:
         entity_id: input_boolean.find_pet
         to: "on"
     action:
-      - service: button.press
+      - service: switch.turn_on
         target:
-          entity_id: button.pet_tracker_<device_id>_find
+          entity_id: switch.pet_tracker_<device_id>_search
 ```
 
 ---

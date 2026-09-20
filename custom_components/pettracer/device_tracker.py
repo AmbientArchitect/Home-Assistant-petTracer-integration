@@ -96,19 +96,6 @@ class PetTracerDeviceTracker(CoordinatorEntity, TrackerEntity):
         return device.lastPos.acc if device.lastPos and device.lastPos.acc else 0
 
     @property
-    def battery_level(self) -> int | None:
-        """Return the battery level of the device."""
-        if not self.coordinator.data or self._device_id not in self.coordinator.data:
-            return None
-
-        device = self.coordinator.data[self._device_id]
-        # Convert battery voltage (mV) to approximate percentage
-        # Typical range: 3300mV (empty) to 4200mV (full)
-        if device.bat:
-            return min(100, max(0, int((device.bat - 3300) / 9)))
-        return None
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return additional state attributes."""
         attrs = {}

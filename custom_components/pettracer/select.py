@@ -18,10 +18,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-# Search mode is a transient, self-expiring "find my cat" mode (see
-# PetTracerDevice.start_search_mode()), not an everyday tracking-speed
-# choice, so it's deliberately left out of this selector's options.
 MODE_TO_OPTION: dict[TrackingMode, str] = {
+    TrackingMode.SEARCH: "Search",
     TrackingMode.FAST: "Fast",
     TrackingMode.NORMAL: "Normal",
     TrackingMode.SLOW: "Slow",
