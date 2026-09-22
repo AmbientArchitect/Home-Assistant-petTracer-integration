@@ -24,8 +24,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from pettracer.types import TrackingMode
-
 from . import PetTracerDataUpdateCoordinator
 from .const import DOMAIN
 
@@ -75,11 +73,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="tracking_mode",
         name="Tracking mode",
         icon="mdi:crosshairs",
-    ),
-    SensorEntityDescription(
-        key="search_status",
-        name="Live tracking",
-        icon="mdi:radar",
     ),
     SensorEntityDescription(
         key="search_mode_duration",
@@ -185,7 +178,7 @@ class PetTracerSensor(CoordinatorEntity, SensorEntity):
                 if isinstance(device.lastContact, str):
                     try:
                         return dt_util.parse_datetime(device.lastContact)
-                    except (ValueError, TypeError):
+                    except ValueError, TypeError:
                         _LOGGER.warning(
                             "Failed to parse lastContact timestamp: %s",
                             device.lastContact,
@@ -207,14 +200,9 @@ class PetTracerSensor(CoordinatorEntity, SensorEntity):
             return None
 
         if self.entity_description.key == "tracking_mode":
-            if device.modeSet is not None:
-                modes = {1: "Fast", 2: "Normal", 3: "Slow", 11: "Search"}
-                return modes.get(device.modeSet, "Unknown")
-            return None
-
-        if self.entity_description.key == "search_status":
             if device.mode is not None:
-                return "On" if device.mode == TrackingMode.SEARCH else "Off"
+                modes = {1: "Fast", 2: "Normal", 3: "Slow", 11: "Search"}
+                return modes.get(device.mode, "Unknown")
             return None
 
         if self.entity_description.key == "search_mode_duration":

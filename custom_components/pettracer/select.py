@@ -90,14 +90,11 @@ class PetTracerTrackingModeSelect(CoordinatorEntity, SelectEntity):
 
     @property
     def current_option(self) -> str | None:
-        """Return the current tracking mode.
-
-        Prefers the optimistically requested mode (`modeSet`) over the
-        collar-confirmed mode (`mode`), matching the portal's own display -
-        see PetTracerDevice.set_tracking_mode()'s docstring.
-        """
+        """Return the current tracking mode."""
         device = self.coordinator.data[self._device_id]
-        mode = device.modeSet if device.modeSet is not None else device.mode
+        #        mode = device.modeSet if device.modeSet is not None else device.mode
+        #        if mode is None:
+        mode = device.mode if device.mode is not None else None
         if mode is None:
             return None
         try:

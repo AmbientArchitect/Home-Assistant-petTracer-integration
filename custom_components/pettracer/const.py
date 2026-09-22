@@ -8,6 +8,7 @@ DOMAIN = "pettracer"
 # separate so ``async_forward_entry_setups`` can be used in ``__init__``.
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,
     Platform.SWITCH,

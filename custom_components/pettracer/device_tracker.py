@@ -136,7 +136,7 @@ class PetTracerDeviceTracker(CoordinatorEntity, TrackerEntity):
 
         # Add tracking mode
         if device.modeSet is not None:
-            modes = {1: "Fast", 2: "Normal", 3: "Slow"}
+            modes = {1: "Fast", 2: "Normal", 3: "Slow", 11: "Search"}
             attrs["tracking_mode"] = modes.get(device.modeSet, "Unknown")
 
         # Add live tracking status
